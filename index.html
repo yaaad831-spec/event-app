@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventHub – ระบบกิจกรรมและงานอีเว้นต์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ HEADER (แสดงเมื่อ Login แล้วเท่านั้น) ============ -->
+<header id="app-header" class="app-header hidden">
+  <div class="header-inner">
+    <a href="#/home" class="brand">
+      <span class="brand-mark">E</span>
+      <span class="brand-name">EventHub</span>
+    </a>
+
+    <nav id="main-nav" class="main-nav"></nav>
+
+    <div class="header-actions">
+      <button id="mobile-menu-btn" class="icon-btn mobile-only" aria-label="เมนู">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <a href="#/profile" class="header-avatar" id="header-avatar" title="โปรไฟล์">👤</a>
+      <button id="logout-btn" class="btn btn-ghost">ออกจากระบบ</button>
+    </div>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav hidden"></nav>
+</header>
+
+<!-- ============ TOAST ============ -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- ============ CONFIRM DIALOG ============ -->
+<div id="confirm-overlay" class="overlay hidden">
+  <div class="dialog">
+    <p id="confirm-message">คุณต้องการดำเนินการนี้หรือไม่?</p>
+    <div class="dialog-actions">
+      <button id="confirm-cancel" class="btn btn-secondary">ยกเลิก</button>
+      <button id="confirm-ok" class="btn btn-danger">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<main id="app-root">
+
+  <!-- ============ PAGE: LOGIN ============ -->
+  <section id="page-login" class="page auth-page">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <span class="brand-mark large">E</span>
+        <h1>EventHub</h1>
+        <p class="muted">ค้นพบและเข้าร่วมกิจกรรมที่ใช่สำหรับคุณ</p>
+      </div>
+
+      <div id="auth-tabs" class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">เข้าสู่ระบบ</button>
+        <button class="auth-tab" data-tab="register">สมัครสมาชิก</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="login-form" class="auth-form">
+        <label>อีเมล
+          <input type="email" id="login-email" required placeholder="you@example.com">
+        </label>
+        <label>รหัสผ่าน
+          <input type="password" id="login-password" required placeholder="••••••">
+        </label>
+        <p id="login-error" class="form-error hidden"></p>
+        <button type="submit" class="btn btn-primary btn-block">เข้าสู่ระบบ</button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="register-form" class="auth-form hidden">
+        <label>ชื่อ-นามสกุล
+          <input type="text" id="register-name" required placeholder="ชื่อของคุณ">
+        </label>
+        <label>อีเมล
+          <input type="email" id="register-email" required placeholder="you@example.com">
+        </label>
+        <label>รหัสผ่าน
+          <input type="password" id="register-password" required placeholder="••••••">
+        </label>
+        <label>สมัครในฐานะ
+          <select id="register-role">
+            <option value="User">ผู้เข้าร่วมกิจกรรม (User)</option>
+            <option value="Organizer">ผู้จัดกิจกรรม (Organizer)</option>
+          </select>
+        </label>
+        <p id="register-error" class="form-error hidden"></p>
+        <button type="submit" class="btn btn-primary btn-block">สมัครสมาชิก</button>
+      </form>
+
+      <div class="demo-hint">
+        <p><strong>บัญชีทดลอง</strong></p>
+        <p>User: user@eventhub.com / 1234</p>
+        <p>Organizer: organizer@eventhub.com / 1234</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE: HOME ============ -->
+  <section id="page-home" class="page hidden">
+    <div class="hero">
+      <div class="hero-text">
+        <h1>ค้นพบกิจกรรมที่ใช่สำหรับคุณ</h1>
+        <p>รวมกิจกรรม เวิร์กชอป และงานอีเว้นต์ใกล้ตัวคุณไว้ในที่เดียว</p>
+        <div class="search-bar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="home-search" placeholder="ค้นหากิจกรรม สถานที่ หรือหมวดหมู่...">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2 class="section-title">หมวดหมู่</h2>
+      <div id="home-categories" class="category-row"></div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-head">
+        <h2 class="section-title">กิจกรรมยอดนิยม</h2>
+      </div>
+      <div id="popular-events" class="event-grid"></div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-head">
+        <h2 class="section-title">กิจกรรมใกล้ถึง</h2>
+      </div>
+      <div id="upcoming-events" class="event-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ PAGE: EXPLORE ============ -->
+  <section id="page-explore" class="page hidden">
+    <div class="page-header">
+      <h1>สำรวจกิจกรรมทั้งหมด</h1>
+    </div>
+    <div class="explore-toolbar">
+      <div class="search-bar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="explore-search" placeholder="ค้นหาชื่อกิจกรรม สถานที่...">
+      </div>
+      <select id="explore-category" class="select-filter">
+        <option value="">ทุกหมวดหมู่</option>
+      </select>
+    </div>
+    <div id="explore-results" class="event-grid"></div>
+    <p id="explore-empty" class="empty-state hidden">ไม่พบกิจกรรมที่ค้นหา</p>
+  </section>
+
+  <!-- ============ PAGE: EVENT DETAIL ============ -->
+  <section id="page-detail" class="page hidden">
+    <div id="detail-content"></div>
+  </section>
+
+  <!-- ============ PAGE: MY EVENTS ============ -->
+  <section id="page-myevents" class="page hidden">
+    <div class="page-header"><h1>กิจกรรมของฉัน</h1></div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="upcoming">กำลังจะถึง</button>
+      <button class="tab-btn" data-tab="history">ประวัติกิจกรรม</button>
+    </div>
+    <div id="myevents-upcoming" class="event-grid"></div>
+    <div id="myevents-history" class="event-grid hidden"></div>
+    <p id="myevents-empty" class="empty-state hidden">ยังไม่มีกิจกรรม</p>
+  </section>
+
+  <!-- ============ PAGE: PROFILE ============ -->
+  <section id="page-profile" class="page hidden">
+    <div class="page-header"><h1>โปรไฟล์</h1></div>
+    <div class="profile-layout">
+      <div class="profile-card">
+        <div class="profile-avatar">👤</div>
+        <form id="profile-form">
+          <label>ชื่อ-นามสกุล
+            <input type="text" id="profile-name" required>
+          </label>
+          <label>อีเมล
+            <input type="text" id="profile-email" disabled>
+          </label>
+          <label>บทบาท
+            <input type="text" id="profile-role" disabled>
+          </label>
+          <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+        </form>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-card">
+          <span class="stat-num" id="profile-events-count">0</span>
+          <span class="stat-label">กิจกรรมของฉัน</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="profile-favs-count">0</span>
+          <span class="stat-label">กิจกรรมที่บันทึกไว้</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2 class="section-title">กิจกรรมที่บันทึกไว้</h2>
+      <div id="profile-favorites" class="event-grid"></div>
+      <p id="profile-favorites-empty" class="empty-state hidden">ยังไม่มีกิจกรรมที่บันทึกไว้</p>
+    </div>
+  </section>
+
+  <!-- ============ PAGE: ORGANIZER DASHBOARD ============ -->
+  <section id="page-dashboard" class="page hidden">
+    <div class="page-header">
+      <h1>แดชบอร์ดผู้จัดงาน</h1>
+      <a href="#/create-event" class="btn btn-primary">+ สร้างกิจกรรม</a>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><span class="stat-num" id="stat-total-events">0</span><span class="stat-label">จำนวนกิจกรรม</span></div>
+      <div class="stat-card"><span class="stat-num" id="stat-total-registrants">0</span><span class="stat-label">ผู้สมัครทั้งหมด</span></div>
+      <div class="stat-card"><span class="stat-num" id="stat-open-events">0</span><span class="stat-label">กิจกรรมที่เปิดรับสมัคร</span></div>
+      <div class="stat-card"><span class="stat-num" id="stat-upcoming-events">0</span><span class="stat-label">กิจกรรมที่กำลังจะมาถึง</span></div>
+    </div>
+    <div class="dashboard-insights">
+      <div class="insight-card">
+        <div class="section-head"><h2 class="section-title">กิจกรรมตามหมวดหมู่</h2><a href="#/reports" class="text-link">ดูรายงาน</a></div>
+        <div id="category-chart" class="bar-chart"></div>
+      </div>
+      <div class="insight-card">
+        <h2 class="section-title">กิจกรรมถัดไป</h2>
+        <div id="dashboard-upcoming" class="mini-list"></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ชื่อกิจกรรม</th><th>วันที่</th><th>ผู้สมัคร</th><th>ที่นั่ง</th><th>สถานะ</th><th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="dashboard-table-body"></tbody>
+      </table>
+    </div>
+    <p id="dashboard-empty" class="empty-state hidden">คุณยังไม่มีกิจกรรม ลองสร้างกิจกรรมแรกของคุณ</p>
+  </section>
+
+  <!-- ============ PAGE: CREATE / EDIT EVENT ============ -->
+  <section id="page-eventform" class="page hidden">
+    <div class="page-header"><h1 id="eventform-title">สร้างกิจกรรม</h1></div>
+    <form id="event-form" class="event-form-card">
+      <input type="hidden" id="ef-id">
+      <label>รูปกิจกรรม (URL รูปภาพ)
+        <input type="text" id="ef-image" placeholder="https://...">
+      </label>
+      <label>ชื่อกิจกรรม
+        <input type="text" id="ef-name" required>
+      </label>
+      <label>หมวดหมู่
+        <select id="ef-category" required></select>
+      </label>
+      <label>รายละเอียด
+        <textarea id="ef-description" rows="4" required></textarea>
+      </label>
+      <div class="form-row">
+        <label>วันที่
+          <input type="date" id="ef-date" required>
+        </label>
+        <label>เวลาเริ่ม
+          <input type="time" id="ef-starttime" required>
+        </label>
+        <label>เวลาสิ้นสุด
+          <input type="time" id="ef-endtime" required>
+        </label>
+      </div>
+      <label>สถานที่
+        <input type="text" id="ef-location" required>
+      </label>
+      <div class="form-row">
+        <label>ราคา (บาท, ใส่ 0 หากฟรี)
+          <input type="number" id="ef-price" min="0" required>
+        </label>
+        <label>จำนวนที่นั่ง
+          <input type="number" id="ef-capacity" min="1" required>
+        </label>
+      </div>
+      <div class="form-actions">
+        <a href="#/dashboard" class="btn btn-secondary">ยกเลิก</a>
+        <button type="submit" class="btn btn-primary" id="ef-submit-btn">สร้างกิจกรรม</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ PAGE: PARTICIPANTS ============ -->
+  <section id="page-participants" class="page hidden">
+    <div class="page-header">
+      <h1 id="participants-title">รายชื่อผู้เข้าร่วม</h1>
+      <div class="page-actions"><button id="export-participants" class="btn btn-secondary">ส่งออก CSV</button><a href="#/dashboard" class="btn btn-secondary">← กลับแดชบอร์ด</a></div>
+    </div>
+    <div class="explore-toolbar compact-toolbar"><div class="search-bar"><input type="text" id="participants-search" placeholder="ค้นหาชื่อหรืออีเมลผู้สมัคร..."></div></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>ชื่อ</th><th>Email</th><th>วันที่สมัคร</th><th>Check-in</th><th>สถานะ</th><th>จัดการ</th></tr>
+        </thead>
+        <tbody id="participants-table-body"></tbody>
+      </table>
+    </div>
+    <p id="participants-empty" class="empty-state hidden">ยังไม่มีผู้เข้าร่วมกิจกรรมนี้</p>
+  </section>
+
+  <!-- ============ PAGE: USERS ============ -->
+  <section id="page-users" class="page hidden">
+    <div class="page-header"><h1>จัดการผู้ใช้</h1><span class="muted">ดูแลสมาชิกและสิทธิ์การใช้งาน</span></div>
+    <div class="explore-toolbar compact-toolbar"><div class="search-bar"><input type="text" id="users-search" placeholder="ค้นหาชื่อหรืออีเมล..."></div><select id="users-role-filter" class="select-filter"><option value="">ทุกบทบาท</option><option value="User">User</option><option value="Organizer">Admin / Organizer</option></select></div>
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>ชื่อ</th><th>Email</th><th>บทบาท</th><th>สถานะบัญชี</th><th>จัดการ</th></tr></thead><tbody id="users-table-body"></tbody></table></div>
+  </section>
+
+  <!-- ============ PAGE: REPORTS ============ -->
+  <section id="page-reports" class="page hidden">
+    <div class="page-header"><h1>รายงานและสถิติ</h1><button id="export-report" class="btn btn-secondary">ส่งออก CSV</button></div>
+    <div class="stats-row"><div class="stat-card"><span class="stat-num" id="report-events">0</span><span class="stat-label">จำนวนกิจกรรม</span></div><div class="stat-card"><span class="stat-num" id="report-applicants">0</span><span class="stat-label">จำนวนผู้สมัคร</span></div><div class="stat-card"><span class="stat-num" id="report-attendees">0</span><span class="stat-label">ผู้เข้าร่วมที่ยืนยัน</span></div></div>
+    <div class="insight-card"><h2 class="section-title">สถิติแยกตามกิจกรรม</h2><div id="report-event-list" class="report-list"></div></div>
+  </section>
+
+  <!-- ============ PAGE: SETTINGS ============ -->
+  <section id="page-settings" class="page hidden">
+    <div class="page-header"><h1>ตั้งค่าระบบ</h1></div>
+    <form id="settings-form" class="event-form-card"><label>ชื่อเว็บไซต์<input type="text" id="setting-site-name" required></label><label>คำอธิบายเว็บไซต์<textarea id="setting-site-description" rows="3"></textarea></label><label class="check-label"><input type="checkbox" id="setting-registration-enabled"> เปิดรับการลงทะเบียนสมาชิกใหม่</label><div class="form-actions"><button type="submit" class="btn btn-primary">บันทึกการตั้งค่า</button></div></form>
+  </section>
+
+</main>
+
+<footer id="app-footer" class="app-footer hidden">
+  <p>© 2026 EventHub — ระบบกิจกรรมและงานอีเว้นต์สำหรับนักเรียนและวัยรุ่น</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
